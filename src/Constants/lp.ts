@@ -1,0 +1,3 @@
+export const HE_BUSD = "0xd89d71fa750c899ed777a9237e4863c8e18a2576";
+export const HE_BNB = "0x8c7517830d98b6a3182d8b296d1885bb9a13f305";
+export const BFC_BUSD = "0xe213144cde86094e512203814525ed11afaa7d11"; //USDC-BFC
