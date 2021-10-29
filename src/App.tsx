@@ -5,6 +5,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { TrackingController } from "./Controllers/TrackingController";
 import { JsonRpcProvider } from "ethers/node_modules/@ethersproject/providers";
 import {HE_FILTER,BFC_FILTER} from './Constants/Filters/index'
+import TrackingControllerV2 from "./Controllers/TrackingControllerV2";
+import { toChecksumAddress } from "ethereumjs-util";
 function App() {
     // useEffect(()=>{
     //     const heTrackingController  = new TrackingController({
@@ -16,14 +18,21 @@ function App() {
     //     heTrackingController.start()
     // },[])
     useEffect(()=>{
-       
-        const bFCTrackingController  = new TrackingController({
-            provider:new  JsonRpcProvider("https://bsc-dataseed.binance.org/"),
-            filters:BFC_FILTER.default,
-            upPrice:2.5,
-            downPrice:2
+        new TrackingControllerV2({
+            filter:BFC_FILTER.default[0],
+            address:toChecksumAddress('0x727b531038198E27A1a4d0Fd83e1693c1da94892')
         })
-        bFCTrackingController.start()
+        new TrackingControllerV2({
+            filter:HE_FILTER.default[0],
+            address:toChecksumAddress('0x20d39a5130f799b95b55a930e5b7ebc589ea9ed8')
+        })
+        // const bFCTrackingController  = new TrackingController({
+        //     provider:new  JsonRpcProvider("https://bsc-dataseed.binance.org/"),
+        //     filters:BFC_FILTER.default,
+        //     upPrice:2.5,
+        //     downPrice:2
+        // })
+        // bFCTrackingController.start()
     },[])
     return (
         <div className="App">
