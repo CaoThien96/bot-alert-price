@@ -1,8 +1,8 @@
 import { toChecksumAddress } from "ethereumjs-util";
-import { BFC_BUSD, TOPIC0 } from "../index";
+import { BFC_BUSD, TOPIC0, BFC_USDC } from "../index";
 const filter = [
     {
-        address: toChecksumAddress(BFC_BUSD), // HE/BUSD
+        address: [toChecksumAddress(BFC_USDC)], // HE/BUSD
         topics: [TOPIC0],
     },
 ];

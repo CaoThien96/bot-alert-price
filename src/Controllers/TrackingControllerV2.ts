@@ -13,7 +13,7 @@ export default class TrackingControllerV2 {
     filter: any;
     address: string;
     getLogProcessing?: boolean;
-    percent: number = 1.5;
+    percent: number = 1;
     constructor({ filter, address }: { filter: any; address: string }) {
         this.filter = filter;
         this.provider = new JsonRpcProvider(
@@ -32,7 +32,9 @@ export default class TrackingControllerV2 {
         address: string;
     };
     async getInfoPair() {
-        const address = this.filter.address;
+        const address = Array.isArray(this.filter.address)
+            ? this.filter.address[0]
+            : this.filter.address;
         const pairContract = new ethers.Contract(
             toChecksumAddress(address),
             ABI,
@@ -84,9 +86,12 @@ export default class TrackingControllerV2 {
     }
     async getLog() {
         this.getLogProcessing = true;
-        this.filter.fromBlock = this.blockTracked + 1;
-        const logs: { blockNumber: number }[] = await this.provider.getLogs(
-            this.filter
+        this.filter.fromBlock = ethers.BigNumber.from(
+            this.blockTracked + 1
+        ).toHexString();
+        const logs: { blockNumber: number }[] = await this.provider.send(
+            "eth_getLogs",
+            [this.filter]
         );
         if (!logs || (logs && logs.length === 0)) {
             this.getLogProcessing = false;
@@ -107,6 +112,7 @@ export default class TrackingControllerV2 {
     }
     price: number = 0;
     alertPrice(price: number) {
+        price = parseFloat(price.toFixed(2));
         const symbol =
             this.address === this.token0?.address
                 ? this.token0?.symbol
@@ -115,10 +121,12 @@ export default class TrackingControllerV2 {
             this.price = price;
             return;
         }
-        if (((this.price - price) * 100) / this.price >= this.percent) {
-            this.log(`${symbol} Giảm xuống ${price}`);
-        } else if (((price - this.price) * 100) / this.price >= this.percent) {
-            this.log(`${symbol} Tăng lên ${price}`);
+        if ((Math.abs(this.price - price) * 100) / this.price >= this.percent) {
+            this.log(
+                `${symbol} ${
+                    price - this.price > 0 ? "Tăng lên" : "Giảm xuống"
+                } ${price}`
+            );
         }
         this.price = price;
     }
@@ -150,7 +158,7 @@ export default class TrackingControllerV2 {
                     console.log(
                         `Sell ${formatEther(amount0In)} ${
                             this.token0.symbol
-                        } with price ${price.toJSON()} ${this.token1?.symbol}`
+                        } with price ${price.toFixed(2)} ${this.token1?.symbol}`
                     );
                     document.title = price.toJSON();
                 } else {
@@ -162,7 +170,7 @@ export default class TrackingControllerV2 {
                     console.log(
                         `Buy ${formatEther(amount0Out)} ${
                             this.token0.symbol
-                        } with price ${price.toJSON()} ${this.token1?.symbol}`
+                        } with price ${price.toFixed(2)} ${this.token1?.symbol}`
                     );
                     document.title = price.toJSON();
                 }
@@ -176,7 +184,7 @@ export default class TrackingControllerV2 {
                     console.log(
                         `Buy ${formatEther(amount1Out)} ${
                             this.token1?.symbol
-                        } with price ${price.toJSON()} ${this.token0?.symbol}`
+                        } with price ${price.toFixed(2)} ${this.token0?.symbol}`
                     );
                     document.title = price.toJSON();
                 } else {
@@ -188,7 +196,9 @@ export default class TrackingControllerV2 {
                     console.log(
                         `Sell ${formatEther(amount1In)} ${
                             this.token1?.symbol
-                        }  with price ${price.toJSON()} ${this.token0?.symbol}`
+                        }  with price ${price.toFixed(2)} ${
+                            this.token0?.symbol
+                        }`
                     );
                     document.title = price.toJSON();
                 }
@@ -208,7 +218,6 @@ export default class TrackingControllerV2 {
             .get(api)
             .then(function (response) {
                 // handle success
-                console.log(response);
             })
             .catch(function (error) {
                 // handle error
