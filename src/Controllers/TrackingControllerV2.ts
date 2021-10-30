@@ -221,7 +221,6 @@ export default class TrackingControllerV2 {
         });
     }
     log(data: any) {
-        return;
         const instance = axios.create({
             baseURL: "https://api.telegram.org/",
             timeout: 1000,
