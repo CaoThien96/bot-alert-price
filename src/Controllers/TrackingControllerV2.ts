@@ -8,6 +8,7 @@ import { maxBy } from "lodash";
 import ABI from "../Constants/pairAbi.json";
 export default class TrackingControllerV2 {
     provider: any;
+    decimal = 4;
     blockTracked: number = 0;
     latestBlock: number = 0;
     filter: any;
@@ -22,6 +23,10 @@ export default class TrackingControllerV2 {
         this.address = address;
 
         this.getInfoPair();
+    }
+    emitPrice?: Function;
+    on(name = "onPrice", cb: Function) {
+        this.emitPrice = cb;
     }
     token0?: {
         symbol: string;
@@ -79,7 +84,9 @@ export default class TrackingControllerV2 {
         this.provider.on("block", async (block: number) => {
             this.latestBlock = block;
             if (!this.getLogProcessing) {
-                this.blockTracked = this.latestBlock;
+                if (this.blockTracked === 0) {
+                    this.blockTracked = this.latestBlock;
+                }
                 this.getLog();
             }
         });
@@ -89,19 +96,20 @@ export default class TrackingControllerV2 {
         this.filter.fromBlock = ethers.BigNumber.from(
             this.blockTracked + 1
         ).toHexString();
+        console.log("query from", this.blockTracked + 1, this.latestBlock);
         const logs: { blockNumber: number }[] = await this.provider.send(
             "eth_getLogs",
             [this.filter]
         );
         if (!logs || (logs && logs.length === 0)) {
             this.getLogProcessing = false;
-            this.blockTracked = this.latestBlock;
             return;
         }
-        this.blockTracked = Math.min(
+        this.blockTracked = Math.max(
             maxBy(logs, "blockNumber")?.blockNumber || this.blockTracked,
             this.latestBlock
         );
+        console.log("this.blockTracked", this.blockTracked);
         this.handleLogs(logs);
         if (this.blockTracked >= this.latestBlock) {
             this.getLogProcessing = false;
@@ -112,12 +120,13 @@ export default class TrackingControllerV2 {
     }
     price: number = 0;
     alertPrice(price: number) {
-        price = parseFloat(price.toFixed(2));
+        price = parseFloat(price.toFixed(this.decimal));
+        this.emitPrice && this.emitPrice(price);
         const symbol =
             this.address === this.token0?.address
                 ? this.token0?.symbol
                 : this.token1?.symbol;
-        if (this.price == 0) {
+        if (this.price === 0) {
             this.price = price;
             return;
         }
@@ -158,7 +167,9 @@ export default class TrackingControllerV2 {
                     console.log(
                         `Sell ${formatEther(amount0In)} ${
                             this.token0.symbol
-                        } with price ${price.toFixed(2)} ${this.token1?.symbol}`
+                        } with price ${price.toFixed(this.decimal)} ${
+                            this.token1?.symbol
+                        }`
                     );
                     document.title = price.toJSON();
                 } else {
@@ -170,7 +181,9 @@ export default class TrackingControllerV2 {
                     console.log(
                         `Buy ${formatEther(amount0Out)} ${
                             this.token0.symbol
-                        } with price ${price.toFixed(2)} ${this.token1?.symbol}`
+                        } with price ${price.toFixed(this.decimal)} ${
+                            this.token1?.symbol
+                        }`
                     );
                     document.title = price.toJSON();
                 }
@@ -184,7 +197,9 @@ export default class TrackingControllerV2 {
                     console.log(
                         `Buy ${formatEther(amount1Out)} ${
                             this.token1?.symbol
-                        } with price ${price.toFixed(2)} ${this.token0?.symbol}`
+                        } with price ${price.toFixed(this.decimal)} ${
+                            this.token0?.symbol
+                        }`
                     );
                     document.title = price.toJSON();
                 } else {
@@ -196,7 +211,7 @@ export default class TrackingControllerV2 {
                     console.log(
                         `Sell ${formatEther(amount1In)} ${
                             this.token1?.symbol
-                        }  with price ${price.toFixed(2)} ${
+                        }  with price ${price.toFixed(this.decimal)} ${
                             this.token0?.symbol
                         }`
                     );
@@ -206,6 +221,7 @@ export default class TrackingControllerV2 {
         });
     }
     log(data: any) {
+        return;
         const instance = axios.create({
             baseURL: "https://api.telegram.org/",
             timeout: 1000,
