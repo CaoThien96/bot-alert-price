@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 import { Form, Button } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { TrackingController } from "./Controllers/TrackingController";
-import { JsonRpcProvider } from "ethers/node_modules/@ethersproject/providers";
-import {HE_FILTER,BFC_FILTER} from './Constants/Filters/index'
+import {
+    HE_FILTER,
+    BFC_FILTER,
+    WANAKA_FILTER,
+} from "./Constants/Filters/index";
 import TrackingControllerV2 from "./Controllers/TrackingControllerV2";
 import { toChecksumAddress } from "ethereumjs-util";
 function App() {
@@ -17,15 +19,25 @@ function App() {
     //     })
     //     heTrackingController.start()
     // },[])
-    useEffect(()=>{
+    useEffect(() => {
         new TrackingControllerV2({
-            filter:BFC_FILTER.default[0],
-            address:toChecksumAddress('0x727b531038198E27A1a4d0Fd83e1693c1da94892')
-        })
+            filter: BFC_FILTER.default[0],
+            address: toChecksumAddress(
+                "0x727b531038198E27A1a4d0Fd83e1693c1da94892"
+            ),
+        });
         new TrackingControllerV2({
-            filter:HE_FILTER.default[0],
-            address:toChecksumAddress('0x20d39a5130f799b95b55a930e5b7ebc589ea9ed8')
-        })
+            filter: HE_FILTER.default[0],
+            address: toChecksumAddress(
+                "0x20d39a5130f799b95b55a930e5b7ebc589ea9ed8"
+            ),
+        });
+        new TrackingControllerV2({
+            filter: WANAKA_FILTER.default[0],
+            address: toChecksumAddress(
+                "0x339c72829ab7dd45c3c52f965e7abe358dd8761e"
+            ),
+        });
         // const bFCTrackingController  = new TrackingController({
         //     provider:new  JsonRpcProvider("https://bsc-dataseed.binance.org/"),
         //     filters:BFC_FILTER.default,
@@ -33,7 +45,7 @@ function App() {
         //     downPrice:2
         // })
         // bFCTrackingController.start()
-    },[])
+    }, []);
     return (
         <div className="App">
             <div>
