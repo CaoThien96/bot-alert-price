@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import { toChecksumAddress } from "ethereumjs-util";
 import { ethers, utils, BigNumber as BN } from "ethers";
 import { JsonRpcProvider } from "ethers/node_modules/@ethersproject/providers";
-import { maxBy } from "lodash";
+import { maxBy, orderBy } from "lodash";
 import ABI from "../Constants/pairAbi.json";
 export default class TrackingControllerV2 {
     provider: any;
@@ -14,7 +14,7 @@ export default class TrackingControllerV2 {
     filter: any;
     address: string;
     getLogProcessing?: boolean;
-    percent: number = 1;
+    percent: number = 1.5;
     constructor({ filter, address }: { filter: any; address: string }) {
         this.filter = filter;
         this.provider = new JsonRpcProvider(
@@ -110,6 +110,8 @@ export default class TrackingControllerV2 {
             this.latestBlock
         );
         console.log("this.blockTracked", this.blockTracked);
+        orderBy(logs, ["blockNumber", "logIndex"], ["asc", "asc"]);
+        console.log("logs", logs);
         this.handleLogs(logs);
         if (this.blockTracked >= this.latestBlock) {
             this.getLogProcessing = false;
