@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import { Form, Button } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -6,66 +6,78 @@ import {
     HE_FILTER,
     BFC_FILTER,
     WANAKA_FILTER,
+    MAT_FILTER,
+    SIP_FILTER,
+    CEEK_FILTER,
 } from "./Constants/Filters/index";
 import TrackingControllerV2 from "./Controllers/TrackingControllerV2";
 import { toChecksumAddress } from "ethereumjs-util";
+import TrackingControllerV3 from "./Controllers/TrackingControllerV3";
+
 function App() {
-    // useEffect(()=>{
-    //     const heTrackingController  = new TrackingController({
-    //         provider:new  JsonRpcProvider("https://bsc-dataseed.binance.org/"),
-    //         filters:HE_FILTER.default,
-    //         upPrice:0.4,
-    //         downPrice:0.3
-    //     })
-    //     heTrackingController.start()
-    // },[])
+    const [title, setTitle] = useState("");
     useEffect(() => {
-        new TrackingControllerV2({
-            filter: BFC_FILTER.default[0],
-            address: toChecksumAddress(
-                "0x727b531038198E27A1a4d0Fd83e1693c1da94892"
-            ),
+        const controller = new TrackingControllerV3([
+            {
+                token0: toChecksumAddress(
+                    "0x9e5965d28e8d44cae8f9b809396e0931f9df71ca"
+                ),
+                symbol0: "SIP",
+                symbol1: "BUSD",
+                token1: toChecksumAddress(
+                    "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                ),
+                address: toChecksumAddress(
+                    "0xe948e8bc62ee35d06a015199954c6c2a99e157af"
+                ),
+            },
+            {
+                token0: toChecksumAddress(
+                    "0xf3147987a00d35eecc10c731269003ca093740ca"
+                ),
+                symbol0: "MAT",
+                symbol1: "BUSD",
+                token1: toChecksumAddress(
+                    "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                ),
+                address: toChecksumAddress(
+                    "0x21db3df90ccbffcc47670dcd083a6ff8cd4751fa"
+                ),
+            },
+            {
+                token0: toChecksumAddress(
+                    "0x20d39a5130f799b95b55a930e5b7ebc589ea9ed8"
+                ),
+                symbol0: "HE",
+                symbol1: "BUSD",
+                token1: toChecksumAddress(
+                    "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                ),
+                address: toChecksumAddress(
+                    "0xd89d71fa750c899ed777a9237e4863c8e18a2576"
+                ),
+            },
+            {
+                token0: toChecksumAddress(
+                    "0x339c72829ab7dd45c3c52f965e7abe358dd8761e"
+                ),
+                symbol0: "WAKANA",
+                symbol1: "BUSD",
+                token1: toChecksumAddress(
+                    "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                ),
+                address: toChecksumAddress(
+                    "0x65b51bc890C24C0Da163289B68480020222B4332"
+                ),
+            },
+        ]);
+        controller.on("onPrice", (title: string) => {
+            setTitle(title);
         });
-        new TrackingControllerV2({
-            filter: HE_FILTER.default[0],
-            address: toChecksumAddress(
-                "0x20d39a5130f799b95b55a930e5b7ebc589ea9ed8"
-            ),
-        });
-        new TrackingControllerV2({
-            filter: WANAKA_FILTER.default[0],
-            address: toChecksumAddress(
-                "0x339c72829ab7dd45c3c52f965e7abe358dd8761e"
-            ),
-        });
-        // const bFCTrackingController  = new TrackingController({
-        //     provider:new  JsonRpcProvider("https://bsc-dataseed.binance.org/"),
-        //     filters:BFC_FILTER.default,
-        //     upPrice:2.5,
-        //     downPrice:2
-        // })
-        // bFCTrackingController.start()
     }, []);
     return (
         <div className="App">
-            <div>
-                <Form>
-                    <Form.Group className="mb-3" controlId="formBasicEmail">
-                        <Form.Label>Email address</Form.Label>
-                        <Form.Control placeholder="Enter token address" />
-                        <Form.Text className="text-muted">
-                            We'll never share your email with anyone else.
-                        </Form.Text>
-                    </Form.Group>
-                    <Button
-                        onClick={(e) => e.preventDefault()}
-                        variant="primary"
-                        type="submit"
-                    >
-                        Submit
-                    </Button>
-                </Form>
-            </div>
+            <div>{title}</div>
         </div>
     );
 }

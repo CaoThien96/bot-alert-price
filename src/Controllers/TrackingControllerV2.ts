@@ -6,6 +6,8 @@ import { ethers, utils, BigNumber as BN } from "ethers";
 import { JsonRpcProvider } from "ethers/node_modules/@ethersproject/providers";
 import { maxBy, orderBy } from "lodash";
 import ABI from "../Constants/pairAbi.json";
+import routerABI from "../Constants/UniswapV2Router02.json";
+import { multicallv2 } from "../Utils/multicall";
 export default class TrackingControllerV2 {
     provider: any;
     decimal = 4;
@@ -14,7 +16,7 @@ export default class TrackingControllerV2 {
     filter: any;
     address: string;
     getLogProcessing?: boolean;
-    percent: number = 1.5;
+    percent: number = 0.5;
     constructor({ filter, address }: { filter: any; address: string }) {
         this.filter = filter;
         this.provider = new JsonRpcProvider(
@@ -64,7 +66,7 @@ export default class TrackingControllerV2 {
             token0Contract.symbol(),
             token1Contract.symbol(),
         ]);
-        this.onBlock();
+
         this.token0 = {
             symbol: symbol0,
             address: toChecksumAddress(token0),
@@ -73,6 +75,10 @@ export default class TrackingControllerV2 {
             symbol: symbol1,
             address: toChecksumAddress(token1),
         };
+        const price = await this.getPrice();
+        this.alertPrice(price);
+        this.onBlock();
+
         console.log({
             token0,
             token1,
@@ -91,12 +97,29 @@ export default class TrackingControllerV2 {
             }
         });
     }
+    async getPrice() {
+        const result = await multicallv2(routerABI, [
+            {
+                address: "0x10ed43c718714eb63d5aa57b78b54704e256024e",
+                name: "getAmountsOut",
+                params: [
+                    "1000000000000000000",
+                    this.token0?.address == this.address
+                        ? [this.token0?.address, this.token1?.address]
+                        : [this.token1?.address, this.token0?.address],
+                ],
+            },
+        ]);
+        const amounts = result[0]["amounts"];
+        return parseFloat(formatEther(amounts[1]));
+    }
     async getLog() {
         this.getLogProcessing = true;
         this.filter.fromBlock = ethers.BigNumber.from(
             this.blockTracked + 1
         ).toHexString();
-        console.log("query from", this.blockTracked + 1, this.latestBlock);
+        // console.log("query from", this.blockTracked + 1, this.latestBlock);
+
         const logs: { blockNumber: number }[] = await this.provider.send(
             "eth_getLogs",
             [this.filter]
@@ -105,41 +128,45 @@ export default class TrackingControllerV2 {
             this.getLogProcessing = false;
             return;
         }
+
+        const price = await this.getPrice();
+        this.alertPrice(price);
+
         this.blockTracked = Math.max(
             maxBy(logs, "blockNumber")?.blockNumber || this.blockTracked,
             this.latestBlock
         );
-        console.log("this.blockTracked", this.blockTracked);
-        orderBy(logs, ["blockNumber", "logIndex"], ["asc", "asc"]);
-        console.log("logs", logs);
-        this.handleLogs(logs);
-        if (this.blockTracked >= this.latestBlock) {
-            this.getLogProcessing = false;
-            this.blockTracked = this.latestBlock;
-            return;
-        }
+        // console.log("this.blockTracked", this.blockTracked);
+        // orderBy(logs, ["blockNumber", "logIndex"], ["asc", "asc"]);
+        // console.log("logs", logs);
+        // this.handleLogs(logs);
         this.getLog();
     }
     price: number = 0;
-    alertPrice(price: number) {
-        price = parseFloat(price.toFixed(this.decimal));
-        this.emitPrice && this.emitPrice(price);
+    alertPrice(newPrice: number) {
+        newPrice = parseFloat(newPrice.toFixed(this.decimal));
+        this.emitPrice && this.emitPrice(newPrice);
         const symbol =
             this.address === this.token0?.address
                 ? this.token0?.symbol
                 : this.token1?.symbol;
         if (this.price === 0) {
-            this.price = price;
+            this.price = newPrice;
             return;
         }
-        if ((Math.abs(this.price - price) * 100) / this.price >= this.percent) {
+        const percent = ((newPrice - this.price) * 100) / this.price;
+        console.log(`${symbol} giá ${newPrice} percent: ${percent}`);
+        if (
+            (Math.abs(this.price - newPrice) * 100) / this.price >=
+            this.percent
+        ) {
             this.log(
                 `${symbol} ${
-                    price - this.price > 0 ? "Tăng lên" : "Giảm xuống"
-                } ${price}`
+                    newPrice - this.price > 0 ? "Tăng lên" : "Giảm xuống"
+                } ${newPrice}`
             );
         }
-        this.price = price;
+        this.price = newPrice;
     }
     handleLogs(logs: any[] = []) {
         logs.map(({ data }) => {
@@ -164,7 +191,7 @@ export default class TrackingControllerV2 {
                     const price = new BigNumber(amount1Out.toString()).div(
                         new BigNumber(amount0In.toString())
                     );
-                    this.alertPrice(price.toNumber());
+                    // this.alertPrice(price.toNumber());
 
                     console.log(
                         `Sell ${formatEther(amount0In)} ${
@@ -173,12 +200,12 @@ export default class TrackingControllerV2 {
                             this.token1?.symbol
                         }`
                     );
-                    document.title = price.toJSON();
+                    // document.title = price.toJSON();
                 } else {
                     const price = new BigNumber(amount1In.toString()).div(
                         new BigNumber(amount0Out.toString())
                     );
-                    this.alertPrice(price.toNumber());
+                    // this.alertPrice(price.toNumber());
 
                     console.log(
                         `Buy ${formatEther(amount0Out)} ${
@@ -187,14 +214,14 @@ export default class TrackingControllerV2 {
                             this.token1?.symbol
                         }`
                     );
-                    document.title = price.toJSON();
+                    // document.title = price.toJSON();
                 }
             } else {
                 if (amount0In.gt(0) && amount1Out.gt(0)) {
                     const price = new BigNumber(amount0In.toString()).div(
                         new BigNumber(amount1Out.toString())
                     );
-                    this.alertPrice(price.toNumber());
+                    // this.alertPrice(price.toNumber());
 
                     console.log(
                         `Buy ${formatEther(amount1Out)} ${
@@ -203,12 +230,12 @@ export default class TrackingControllerV2 {
                             this.token0?.symbol
                         }`
                     );
-                    document.title = price.toJSON();
+                    // document.title = price.toJSON();
                 } else {
                     const price = new BigNumber(amount0Out.toString()).div(
                         new BigNumber(amount1In.toString())
                     );
-                    this.alertPrice(price.toNumber());
+                    // this.alertPrice(price.toNumber());
 
                     console.log(
                         `Sell ${formatEther(amount1In)} ${
@@ -217,7 +244,7 @@ export default class TrackingControllerV2 {
                             this.token0?.symbol
                         }`
                     );
-                    document.title = price.toJSON();
+                    // document.title = price.toJSON();
                 }
             }
         });
