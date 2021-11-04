@@ -19,6 +19,7 @@ export default class TrackingControllerV3 {
     percent: number = 1;
     pairs: any[];
     prices: any[];
+    tokenOnlyPrice: any[];
     constructor(
         pairs: {
             token0: string;
@@ -28,10 +29,19 @@ export default class TrackingControllerV3 {
             price1?: number;
             symbol1: string;
             address: string;
+        }[],
+        onlyPrice: {
+            token0: string;
+            symbol0: string;
+            price0?: number;
+            token1: string;
+            price1?: number;
+            symbol1: string;
         }[]
     ) {
         this.pairs = pairs;
-        this.prices = this.pairs.map((_) => 0);
+        this.tokenOnlyPrice = onlyPrice;
+        this.prices = this.pairs.concat(this.tokenOnlyPrice).map((_) => 0);
         this.filter = {
             address: pairs.map((el) => el.address),
             topics: [
@@ -59,19 +69,15 @@ export default class TrackingControllerV3 {
     async getPrice() {
         const result = await multicallv2(
             routerABI,
-            this.pairs.map((pair) => ({
+            this.pairs.concat(this.tokenOnlyPrice).map((pair) => ({
                 address: "0x10ed43c718714eb63d5aa57b78b54704e256024e",
                 name: "getAmountsOut",
                 params: ["1000000000000000000", [pair.token0, pair.token1]],
             }))
         );
-        const prices = this.pairs.map((pair, i) => {
+        const prices = this.pairs.concat(this.tokenOnlyPrice).map((pair, i) => {
             const amounts = result[i]["amounts"];
-            console.log(
-                `1 ${pair.symbol0} = ${parseFloat(formatEther(amounts[1]))} ${
-                    pair.symbol1
-                }`
-            );
+
             // this.prices[i] = parseFloat(formatEther(amounts[1]));
             return parseFloat(formatEther(amounts[1]));
         });
@@ -83,10 +89,10 @@ export default class TrackingControllerV3 {
     }
     alertPrice(prices: number[]) {
         let title = "";
-
+        const tokens = this.pairs.concat(this.tokenOnlyPrice);
         prices.forEach((price, i) => {
             const newPrice = price;
-            title += `${this.pairs[i].symbol0}:` + price.toFixed(3) + "-";
+            title += `${tokens[i].symbol0}:` + price.toFixed(3) + "-";
             const oldPrice = this.prices[i];
             if (oldPrice === 0) {
                 this.prices[i] = newPrice;
@@ -95,15 +101,21 @@ export default class TrackingControllerV3 {
                 const percent = ((newPrice - oldPrice) * 100) / oldPrice;
                 if (percent > 0 && percent >= this.percent) {
                     this.log(
-                        `${this.pairs[i].symbol0} giá ${newPrice.toFixed(
+                        `${tokens[i].symbol0} giá ${newPrice.toFixed(
                             4
                         )} tăng  ${percent.toFixed(3)}%`
                     );
                 } else if (percent < 0 && Math.abs(percent) >= this.percent) {
                     this.log(
-                        `${this.pairs[i].symbol0} giá ${newPrice.toFixed(
+                        `${tokens[i].symbol0} giá ${newPrice.toFixed(
                             4
                         )} giảm  ${(percent * -1).toFixed(3)}%`
+                    );
+                } else {
+                    console.log(
+                        `${tokens[i].symbol0} giá ${newPrice.toFixed(4)} ${
+                            percent < 0 ? "Giảm" : "Tăng"
+                        }  ${Math.abs(percent * -1).toFixed(3)}%`
                     );
                 }
             }
