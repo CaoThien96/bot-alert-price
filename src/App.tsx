@@ -173,6 +173,21 @@ function App() {
                         "0xe9e7cea3dedca5984780bafc599bd69add087d56",
                     ],
                 },
+                {
+                    token0: toChecksumAddress(
+                        "0x9d12cc56d133fc5c60e9385b7a92f35a682da0bd"
+                    ),
+                    symbol0: "FGSPORT",
+                    symbol1: "BUSD",
+                    token1: toChecksumAddress(
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                    ),
+                    paths: [
+                        "0x9d12cc56d133fc5c60e9385b7a92f35a682da0bd",
+                        "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+                    ],
+                },
             ]
         );
         controller.on("onPrice", (title: string) => {
