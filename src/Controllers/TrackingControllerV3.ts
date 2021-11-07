@@ -37,6 +37,7 @@ export default class TrackingControllerV3 {
             token1: string;
             price1?: number;
             symbol1: string;
+            paths?: string[];
         }[]
     ) {
         this.pairs = pairs;
@@ -62,7 +63,7 @@ export default class TrackingControllerV3 {
                 if (this.blockTracked === 0) {
                     this.blockTracked = this.latestBlock - 1;
                 }
-                this.getLog();
+                this.latestBlock - this.blockTracked > 30 && this.updatePrice();
             }
         });
     }
@@ -72,14 +73,17 @@ export default class TrackingControllerV3 {
             this.pairs.concat(this.tokenOnlyPrice).map((pair) => ({
                 address: "0x10ed43c718714eb63d5aa57b78b54704e256024e",
                 name: "getAmountsOut",
-                params: ["1000000000000000000", [pair.token0, pair.token1]],
+                params: [
+                    "1000000000000000000",
+                    pair.paths ? pair.paths : [pair.token0, pair.token1],
+                ],
             }))
         );
         const prices = this.pairs.concat(this.tokenOnlyPrice).map((pair, i) => {
             const amounts = result[i]["amounts"];
 
             // this.prices[i] = parseFloat(formatEther(amounts[1]));
-            return parseFloat(formatEther(amounts[1]));
+            return parseFloat(formatEther(amounts[amounts.length - 1]));
         });
         return prices;
     }
@@ -111,7 +115,7 @@ export default class TrackingControllerV3 {
                             4
                         )} giảm  ${(percent * -1).toFixed(3)}%`
                     );
-                } else {
+                } else if (Math.abs(percent) > 0) {
                     console.log(
                         `${tokens[i].symbol0} giá ${newPrice.toFixed(4)} ${
                             percent < 0 ? "Giảm" : "Tăng"
@@ -122,6 +126,13 @@ export default class TrackingControllerV3 {
         });
         document.title = title;
         this.emitPrice && this.emitPrice(title);
+    }
+    async updatePrice() {
+        this.getLogProcessing = true;
+        const prices: number[] = await this.getPrice();
+        this.blockTracked = this.latestBlock;
+        this.alertPrice(prices);
+        this.getLogProcessing = false;
     }
     async getLog() {
         try {

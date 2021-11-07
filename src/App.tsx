@@ -82,6 +82,96 @@ function App() {
                     token1: toChecksumAddress(
                         "0xe9e7cea3dedca5984780bafc599bd69add087d56"
                     ),
+                    paths: [
+                        "0xe0f94ac5462997d2bc57287ac3a3ae4c31345d66",
+                        "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+                    ],
+                },
+                {
+                    token0: toChecksumAddress(
+                        "0xba0b46f556633bd742546e4f37d66d416753003b"
+                    ),
+                    symbol0: "AFK",
+                    symbol1: "BUSD",
+                    token1: toChecksumAddress(
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                    ),
+                },
+                {
+                    token0: toChecksumAddress(
+                        "0x6cad12b3618a3c7ef1feb6c91fdc3251f58c2a90"
+                    ),
+                    symbol0: "NINO",
+                    symbol1: "BUSD",
+                    token1: toChecksumAddress(
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                    ),
+                },
+                {
+                    token0: toChecksumAddress(
+                        "0x411ec510c85c9e56271bf4e10364ffa909e685d9"
+                    ),
+                    symbol0: "MOWA",
+                    symbol1: "BUSD",
+                    token1: toChecksumAddress(
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                    ),
+                },
+                {
+                    token0: toChecksumAddress(
+                        "0x00e1656e45f18ec6747f5a8496fd39b50b38396d"
+                    ),
+                    symbol0: "BCOIN",
+                    symbol1: "BUSD",
+                    token1: toChecksumAddress(
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                    ),
+                },
+                {
+                    token0: toChecksumAddress(
+                        "0x8255e7b6fd3467adf0c092a18ae01879627a9755"
+                    ),
+                    symbol0: "CMC",
+                    symbol1: "BUSD",
+                    token1: toChecksumAddress(
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                    ),
+                    paths: [
+                        "0x8255e7b6fd3467adf0c092a18ae01879627a9755",
+                        "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+                    ],
+                },
+                {
+                    token0: toChecksumAddress(
+                        "0x5649e392a1bac3e21672203589adf8f6c99f8db3"
+                    ),
+                    symbol0: "ZDC",
+                    symbol1: "BUSD",
+                    token1: toChecksumAddress(
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                    ),
+                    paths: [
+                        "0x5649e392a1bac3e21672203589adf8f6c99f8db3",
+                        "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+                    ],
+                },
+                {
+                    token0: toChecksumAddress(
+                        "0xcfbb1bfa710cb2eba070cc3bec0c35226fea4baf"
+                    ),
+                    symbol0: "HEROEGG",
+                    symbol1: "BUSD",
+                    token1: toChecksumAddress(
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                    ),
+                    paths: [
+                        "0xcfbb1bfa710cb2eba070cc3bec0c35226fea4baf",
+                        "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+                        "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+                    ],
                 },
             ]
         );
