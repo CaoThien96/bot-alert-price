@@ -1,12 +1,19 @@
 import { formatEther } from "@ethersproject/units";
 import axios from "axios";
-import BigNumber from "bignumber.js";
-import { toChecksumAddress } from "ethereumjs-util";
-import { ethers, utils, BigNumber as BN } from "ethers";
+// import BigNumber from "bignumber.js";
+// import { toChecksumAddress } from "ethereumjs-util";
+import {
+    ethers,
+    // utils,
+    // BigNumber as BN
+} from "ethers";
 import { JsonRpcProvider } from "ethers/node_modules/@ethersproject/providers";
 
-import { maxBy, orderBy } from "lodash";
-import ABI from "../Constants/pairAbi.json";
+import {
+    maxBy,
+    // orderBy
+} from "lodash";
+// import ABI from "../Constants/pairAbi.json";
 import routerABI from "../Constants/UniswapV2Router02.json";
 import { multicallv2 } from "../Utils/multicall";
 export default class TrackingControllerV3 {
@@ -59,12 +66,14 @@ export default class TrackingControllerV3 {
     onBlock() {
         this.provider.on("block", async (block: number) => {
             this.latestBlock = block;
-            if (!this.getLogProcessing) {
-                if (this.blockTracked === 0) {
-                    this.blockTracked = this.latestBlock - 1;
-                }
-                this.latestBlock - this.blockTracked > 30 && this.updatePrice();
-            }
+            const prices: number[] = await this.getPrice();
+            this.alertPrice(prices);
+            // if (!this.getLogProcessing) {
+            //     if (this.blockTracked === 0) {
+            //         this.blockTracked = this.latestBlock - 1;
+            //     }
+            //     this.latestBlock - this.blockTracked > 30 && this.updatePrice();
+            // }
         });
     }
     async getPrice() {
@@ -136,6 +145,8 @@ export default class TrackingControllerV3 {
     }
     async getLog() {
         try {
+            const prices: number[] = await this.getPrice();
+            this.alertPrice(prices);
             this.getLogProcessing = true;
             this.filter.fromBlock = ethers.BigNumber.from(
                 this.blockTracked + 1
@@ -150,8 +161,8 @@ export default class TrackingControllerV3 {
                 return;
             }
 
-            const prices: number[] = await this.getPrice();
-            this.alertPrice(prices);
+            // const prices: number[] = await this.getPrice();
+            // this.alertPrice(prices);
 
             this.blockTracked = Math.max(
                 maxBy(logs, "blockNumber")?.blockNumber || this.blockTracked,
