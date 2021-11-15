@@ -18,7 +18,7 @@ import routerABI from "../Constants/UniswapV2Router02.json";
 import { multicallv2 } from "../Utils/multicall";
 export default class TrackingControllerV3 {
     provider: any;
-    decimal = 4;
+    decimal = 5;
     blockTracked: number = 0;
     latestBlock: number = 0;
     filter: any;
@@ -105,7 +105,8 @@ export default class TrackingControllerV3 {
         const tokens = this.pairs.concat(this.tokenOnlyPrice);
         prices.forEach((price, i) => {
             const newPrice = price;
-            title += `${tokens[i].symbol0}:` + price.toFixed(3) + "-";
+            title +=
+                `${tokens[i].symbol0}:` + price.toFixed(this.decimal) + "-";
             const oldPrice = this.prices[i];
             if (oldPrice === 0) {
                 this.prices[i] = newPrice;
@@ -180,7 +181,7 @@ export default class TrackingControllerV3 {
             timeout: 1000,
             headers: { "X-Custom-Header": "foobar" },
         });
-        const api = `/bot2067736235:AAHZGJgJkjgTZiUhHjC9rubkBd1z-Hc-PM8/sendMessage?chat_id=873815426&text=${
+        const api = `/bot2067736235:AAGdJDImsu2oIK5A4S_BABsfpDUtxL7ZyUY/sendMessage?chat_id=873815426&text=${
             typeof data == "string" ? data : JSON.stringify(data)
         }`;
         instance
