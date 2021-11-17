@@ -36,6 +36,9 @@ export default class TrackingControllerV3 {
             price1?: number;
             symbol1: string;
             address: string;
+            minPrice?: number;
+            maxPrice?: number;
+            ignorePercent?: boolean;
         }[],
         onlyPrice: {
             token0: string;
@@ -45,6 +48,9 @@ export default class TrackingControllerV3 {
             price1?: number;
             symbol1: string;
             paths?: string[];
+            minPrice?: number;
+            maxPrice: number;
+            ignorePercent?: boolean;
         }[]
     ) {
         this.pairs = pairs;
@@ -112,6 +118,16 @@ export default class TrackingControllerV3 {
                 this.prices[i] = newPrice;
             } else {
                 this.prices[i] = newPrice;
+                if (tokens[i].maxPrice && newPrice >= tokens[i].maxPrice) {
+                    this.log(
+                        `${tokens[i].symbol0} lớn hơn ${tokens[i].maxPrice}`
+                    );
+                }
+                if (tokens[i].minPrice && newPrice < tokens[i].minPrice) {
+                    this.log(
+                        `${tokens[i].symbol0} nhỏ hơn ${tokens[i].minPrice}`
+                    );
+                }
                 const percent = ((newPrice - oldPrice) * 100) / oldPrice;
                 if (percent > 0 && percent >= this.percent) {
                     this.log(

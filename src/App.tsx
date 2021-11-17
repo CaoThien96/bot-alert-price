@@ -29,7 +29,29 @@ function App() {
                     token1: toChecksumAddress(
                         "0xe9e7cea3dedca5984780bafc599bd69add087d56"
                     ),
+                    maxPrice: 0.0096,
+                    minPrice: 0.0091,
                 },
+                // {
+                //     token0: toChecksumAddress(
+                //         "0x20d39a5130f799b95b55a930e5b7ebc589ea9ed8"
+                //     ),
+                //     symbol0: "HE",
+                //     symbol1: "BUSD",
+                //     token1: toChecksumAddress(
+                //         "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                //     ),
+                // },
+                // {
+                //     token0: toChecksumAddress(
+                //         "0xf3147987a00d35eecc10c731269003ca093740ca"
+                //     ),
+                //     symbol0: "MAT",
+                //     symbol1: "BUSD",
+                //     token1: toChecksumAddress(
+                //         "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+                //     ),
+                // },
             ]
         );
         controller.on("onPrice", (title: string) => {
