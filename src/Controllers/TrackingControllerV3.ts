@@ -1,21 +1,21 @@
-import { formatEther } from "@ethersproject/units";
-import axios from "axios";
+import { formatEther } from '@ethersproject/units';
+import axios from 'axios';
 // import BigNumber from "bignumber.js";
 // import { toChecksumAddress } from "ethereumjs-util";
 import {
     ethers,
     // utils,
     // BigNumber as BN
-} from "ethers";
-import { JsonRpcProvider } from "ethers/node_modules/@ethersproject/providers";
+} from 'ethers';
+import { JsonRpcProvider } from 'ethers/node_modules/@ethersproject/providers';
 
 import {
     maxBy,
     // orderBy
-} from "lodash";
+} from 'lodash';
 // import ABI from "../Constants/pairAbi.json";
-import routerABI from "../Constants/UniswapV2Router02.json";
-import { multicallv2 } from "../Utils/multicall";
+import routerABI from '../Constants/UniswapV2Router02.json';
+import { multicallv2 } from '../Utils/multicall';
 export default class TrackingControllerV3 {
     provider: any;
     decimal = 5;
@@ -23,10 +23,11 @@ export default class TrackingControllerV3 {
     latestBlock: number = 0;
     filter: any;
     getLogProcessing?: boolean;
-    percent: number = 1;
+    percent: number = 4;
     pairs: any[];
     prices: any[];
     tokenOnlyPrice: any[];
+    noti = false;
     constructor(
         pairs: {
             token0: string;
@@ -51,6 +52,7 @@ export default class TrackingControllerV3 {
             minPrice?: number;
             maxPrice: number;
             ignorePercent?: boolean;
+            isBuy?: boolean;
         }[]
     ) {
         this.pairs = pairs;
@@ -59,18 +61,18 @@ export default class TrackingControllerV3 {
         this.filter = {
             address: pairs.map((el) => el.address),
             topics: [
-                "0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822",
+                '0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822',
             ],
         };
         this.provider = new JsonRpcProvider(
-            "https://bsc-dataseed.binance.org/"
+            'https://bsc-dataseed.binance.org/'
         );
         this.onBlock();
         this.getPrice().then((prices) => this.alertPrice(prices));
     }
 
     onBlock() {
-        this.provider.on("block", async (block: number) => {
+        this.provider.on('block', async (block: number) => {
             this.latestBlock = block;
             const prices: number[] = await this.getPrice();
             this.alertPrice(prices);
@@ -86,33 +88,35 @@ export default class TrackingControllerV3 {
         const result = await multicallv2(
             routerABI,
             this.pairs.concat(this.tokenOnlyPrice).map((pair) => ({
-                address: "0x10ed43c718714eb63d5aa57b78b54704e256024e",
-                name: "getAmountsOut",
+                address: '0x10ed43c718714eb63d5aa57b78b54704e256024e',
+                name: pair.isBuy ? 'getAmountsIn' : 'getAmountsOut',
                 params: [
-                    "1000000000000000000",
+                    '1000000000000000000',
                     pair.paths ? pair.paths : [pair.token0, pair.token1],
                 ],
             }))
         );
         const prices = this.pairs.concat(this.tokenOnlyPrice).map((pair, i) => {
-            const amounts = result[i]["amounts"];
+            const amounts = result[i]['amounts'];
 
             // this.prices[i] = parseFloat(formatEther(amounts[1]));
-            return parseFloat(formatEther(amounts[amounts.length - 1]));
+            return parseFloat(
+                formatEther(amounts[pair.isBuy ? 0 : amounts.length - 1])
+            );
         });
         return prices;
     }
     emitPrice?: Function;
-    on(name = "onPrice", cb: Function) {
+    on(name = 'onPrice', cb: Function) {
         this.emitPrice = cb;
     }
     alertPrice(prices: number[]) {
-        let title = "";
+        let title = '';
         const tokens = this.pairs.concat(this.tokenOnlyPrice);
         prices.forEach((price, i) => {
             const newPrice = price;
             title +=
-                `${tokens[i].symbol0}:` + price.toFixed(this.decimal) + "-";
+                `${tokens[i].symbol0}:` + price.toFixed(this.decimal) + '-';
             const oldPrice = this.prices[i];
             if (oldPrice === 0) {
                 this.prices[i] = newPrice;
@@ -144,7 +148,7 @@ export default class TrackingControllerV3 {
                 } else if (Math.abs(percent) > 0) {
                     console.log(
                         `${tokens[i].symbol0} giá ${newPrice.toFixed(4)} ${
-                            percent < 0 ? "Giảm" : "Tăng"
+                            percent < 0 ? 'Giảm' : 'Tăng'
                         }  ${Math.abs(percent * -1).toFixed(3)}%`
                     );
                 }
@@ -170,7 +174,7 @@ export default class TrackingControllerV3 {
             ).toHexString();
             // console.log("query from", this.blockTracked + 1, this.latestBlock);
             const logs: { blockNumber: number }[] = await this.provider.send(
-                "eth_getLogs",
+                'eth_getLogs',
                 [this.filter]
             );
             if (!logs || (logs && logs.length === 0)) {
@@ -182,7 +186,7 @@ export default class TrackingControllerV3 {
             // this.alertPrice(prices);
 
             this.blockTracked = Math.max(
-                maxBy(logs, "blockNumber")?.blockNumber || this.blockTracked,
+                maxBy(logs, 'blockNumber')?.blockNumber || this.blockTracked,
                 this.latestBlock
             );
             this.getLogProcessing = false;
@@ -192,17 +196,22 @@ export default class TrackingControllerV3 {
     }
 
     log(data: any) {
+        if (this.noti) return;
+        this.noti = true;
         const instance = axios.create({
-            baseURL: "https://api.telegram.org/",
+            baseURL: 'https://api.telegram.org/',
             timeout: 1000,
-            headers: { "X-Custom-Header": "foobar" },
+            headers: { 'X-Custom-Header': 'foobar' },
         });
-        const api = `/bot2067736235:AAGdJDImsu2oIK5A4S_BABsfpDUtxL7ZyUY/sendMessage?chat_id=873815426&text=${
-            typeof data == "string" ? data : JSON.stringify(data)
+        const api = `/bot2067736235:AAE4odY1Q_3c54R3V1ye_jBA_WZYFwOrxxE/sendMessage?chat_id=873815426&text=${
+            typeof data == 'string' ? data : JSON.stringify(data)
         }`;
         instance
             .get(api)
-            .then(function (response) {
+            .then( () => {
+                setTimeout(() => {
+                    this.noti = false;
+                }, 10 * 1000);
                 // handle success
             })
             .catch(function (error) {
